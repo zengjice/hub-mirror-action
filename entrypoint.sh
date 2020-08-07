@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -x
+
 mkdir -p /root/.ssh
 echo "${INPUT_DST_KEY}" > /root/.ssh/id_rsa
 chmod 600 /root/.ssh/id_rsa
@@ -28,6 +29,11 @@ STATIC_LIST="${INPUT_STATIC_LIST}"
 
 FORCE_UPDATE="${INPUT_FORCE_UPDATE}"
 
+function err_exit {
+  echo -e "\033[31m $1 \033[0m"
+  exit 1
+}
+
 if [[ "$ACCOUNT_TYPE" == "org" ]]; then
   SRC_LIST_URL_SUFFIX=orgs/$SRC_ACCOUNT/repos
   DST_LIST_URL_SUFFIX=orgs/$DST_ACCOUNT/repos
@@ -37,8 +43,7 @@ elif [[ "$ACCOUNT_TYPE" == "user" ]]; then
   DST_LIST_URL_SUFFIX=users/$DST_ACCOUNT/repos
   DST_CREATE_URL_SUFFIX=user/repos
 else
-  echo "Unknown account type, the `account_type` should be `user` or `org`"
-  exit 1
+  err_exit "Unknown account type, the `account_type` should be `user` or `org`"
 fi
 
 if [[ "$SRC_TYPE" == "github" ]]; then
@@ -56,8 +61,7 @@ elif [[ "$SRC_TYPE" == "gitee" ]]; then
     SRC_REPO_BASE_URL=https://gitee.com/
   fi
 else
-  echo "Unknown src args, the `src` should be `[github|gittee]/account`"
-  exit 1
+  err_exit "Unknown src args, the `src` should be `[github|gittee]/account`"
 fi
 
 if [[ -z $STATIC_LIST ]]; then
@@ -73,12 +77,10 @@ elif [[ "$DST_TYPE" == "gitee" ]]; then
   DST_REPO_CREATE_API=https://gitee.com/api/v5/$DST_CREATE_URL_SUFFIX
   DST_REPO_LIST_API=https://gitee.com/api/v5/$DST_LIST_URL_SUFFIX
 else
-  echo "Unknown dst args, the `dst` should be `[github|gittee]/account`"
-  exit 1
+  err_exit "Unknown dst args, the `dst` should be `[github|gittee]/account`"
 fi
 
-
-function cd_src_repo
+function clone_repo
 {
   echo -e "\033[31m(0/3)\033[0m" "Downloading..."
   if [ ! -d "$1" ]; then
@@ -87,11 +89,12 @@ function cd_src_repo
   cd $1
 }
 
-function add_remote_repo
+function create_repo
 {
   # Auto create non-existing repo
   has_repo=`curl $DST_REPO_LIST_API | jq '.[] | select(.full_name=="'$DST_ACCOUNT'/'$1'").name' | wc -l`
   if [ $has_repo == 0 ]; then
+    echo "Create non-exist repo..."
     if [[ "$DST_TYPE" == "github" ]]; then
       curl -H "Authorization: token $2" --data '{"name":"'$1'"}' $DST_REPO_CREATE_API
     elif [[ "$DST_TYPE" == "gitee" ]]; then
@@ -155,17 +158,13 @@ for repo in $SRC_REPOS
   if test_black_white_list $repo ; then
     echo -e "\n\033[31mBackup $repo ...\033[0m"
 
-    cd_src_repo $repo
+    clone_repo $repo || err_exit "clone and cd failed"
 
-    add_remote_repo $repo $DST_TOKEN
+    create_repo $repo $DST_TOKEN || err_exit "create failed"
 
-    update_repo
+    update_repo || err_exit "Update failed"
 
-    if [ $? -eq 0 ]; then
-      import_repo
-    else
-      echo -e "\033[31mUpdate failed.\033[0m" ""
-    fi
+    import_repo || err_exit "Push failed"
 
     cd ..
   fi
