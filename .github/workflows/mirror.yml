@@ -31,4 +31,4 @@ jobs:
           dst_token: ${{ secrets.GITEE_PRIVATE_TOKEN }}
           account_type: org
           force_update: true
-          clone_style: "ssh"
+          clone_style: "https"
