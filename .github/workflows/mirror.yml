@@ -31,3 +31,5 @@ jobs:
           github_org: FederatedAI
           # 需要同步到的Gitee的组织名（目的）
           gitee_org: FederatedAI
+          force_update: true
+          clone_style: "ssh"
