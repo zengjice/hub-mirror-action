@@ -25,8 +25,8 @@ jobs:
       - name: Sync FederatedAI to Gitee
         uses: zengjice/hub-mirror-action@master
         with:
-          src: github/zengjice
-          dst: gitee/jarviszeng
+          src: github/FederatedAI
+          dst: gitee/FederatedAI
           dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
           dst_token: ${{ secrets.GITEE_PRIVATE_TOKEN }}
           account_type: org
