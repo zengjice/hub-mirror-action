@@ -25,7 +25,8 @@ jobs:
       - name: Sync FederatedAI to Gitee
         with:
           # Gitee对应的秘钥
-          private_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
+          dst_token: ${{ secrets.GITEE_PRIVATE_TOKEN }}
           # 需要同步的Github组织名（源）
           github_org: FederatedAI
           # 需要同步到的Gitee的组织名（目的）
