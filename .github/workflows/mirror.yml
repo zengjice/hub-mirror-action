@@ -20,9 +20,10 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
-      - uses: zengjice/hub-mirror-action@master
+
       # Runs a single command using the runners shell
       - name: Sync FederatedAI to Gitee
+        uses: zengjice/hub-mirror-action@master
         with:
           # Gitee对应的秘钥
           dst_key: ${{ secrets.GITEE_PRIVATE_KEY }}
